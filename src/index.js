@@ -56,59 +56,75 @@ class Game extends React.Component {
                 possibleMove: false, 
             }
         }
-        Pieces.map(piece => startingBoard[piece.startingPosition] = piece);
+        Pieces.map(piece => startingBoard[piece.square] = piece);
 
         this.state = {
-            history: [{ squares: startingBoard, }],
+            history: [{ 
+                squares: startingBoard, 
+            }],
             possibleMoves: [],
-            oneIsNext: true,
+            whiteIsNext: true,
             move: 0,
             moving: false,
-            selectedSquare: 0,
+            selectedSquare: 1,
         };
     }
 
     handleClick(i) {
         const history = this.state.history.slice(0, this.state.move + 1);
         const current = history[history.length - 1];
+        const player = this.state.whiteIsNext ? 'white' : 'black';
         var squares = current.squares.slice();
         var moving = this.state.moving;
         var selectedSquare = this.state.selectedSquare;
         var possibleMoves = this.state.possibleMoves;
-        /*if (calculateWinner(squares) || squares[i].player === this.state.oneIsNext ? 1 : 2) {
+        var moved = false;
+        
+        /*if (calculateWinner(squares) || squares[i].player === this.state.whiteIsNext ? 1 : 2) {
             return;
         }*/
 
-        if ( moving === false && squares[i].name !== '' ) {
+        if ( squares[i].player === player ) {
             moving = true;
+            squares[selectedSquare].selected = false;
             squares[i].selected = true;
             if (i !== selectedSquare) {
                 squares[selectedSquare].selected = false;
                 selectedSquare = i;
             }
-            possibleMoves = this.findPossibleMoves(squares[selectedSquare].type, selectedSquare, squares[selectedSquare].player, squares);
+            possibleMoves.forEach(element => squares[element].possibleMove = false);
+            possibleMoves = this.findPossibleMoves(squares[selectedSquare].type, selectedSquare, player, squares);
             possibleMoves.forEach(element => squares[element].possibleMove = true);
-        } else if ( moving === true ) {
-            // possibleMoves.map((value) => (
-            //     this.movePiece(value, i)
-            // ))
+        } else if ( squares[i].possibleMove === true ) {
+            moving = false;
+            squares[i].name = squares[selectedSquare].name;
+            squares[i].type = squares[selectedSquare].type;
+            squares[i].fa = squares[selectedSquare].fa;
+            squares[i].player = squares[selectedSquare].player;
+            squares[i].possibleMove = false;
+            squares[selectedSquare].name = '';
+            squares[selectedSquare].type = '';
+            squares[selectedSquare].fa = '';
+            squares[selectedSquare].player = '';
+            squares[selectedSquare].selected = false;
+            possibleMoves.forEach(element => squares[element].possibleMove = false);
+            moved = true;
+        } else {
             moving = false;
             squares[selectedSquare].selected = false;
-            alert('clicked! ' + {moving} + ' ' + {selectedSquare} );
-        } else {
-
+            possibleMoves.forEach(element => squares[element].possibleMove = false);
         }
 
         this.setState({
             history: history.concat([{
                 squares: squares,
             }]),
+            possibleMoves: possibleMoves,
+            whiteIsNext: moved ? !this.state.whiteIsNext : this.state.whiteIsNext,
             move: history.length,
-            oneIsNext: !this.state.oneIsNext,
             moving: moving,
             selectedSquare: selectedSquare,
         });
-        
     }
 
     findPossibleMoves(piece, location, player, squares) {
@@ -118,12 +134,12 @@ class Game extends React.Component {
         switch (piece) {
             case 'pawn':
                 if (player === 'white') {
-                    possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+1]);
+                    if (squares[location+8].name === '' && pieceCoords[1]+1 < 8) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+1]);
                     if (pieceCoords[1] === 1) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+2]);
                     if (squares[location+7].player === 'black' && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]+1])
                     if (squares[location+9].player === 'black' && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]+1])
                 } else {
-                    possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-1]);
+                    if (squares[location-8].name === '' && pieceCoords[1]-1 > -1)possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-1]);
                     if (pieceCoords[1] === 6) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-2]);
                     if (squares[location-7].player === 'white' && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]-1])
                     if (squares[location-9].player === 'white' && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]-1])
@@ -131,39 +147,15 @@ class Game extends React.Component {
                 break;
             
             case 'rook':
-                const rookMoves = [[1,8,1,1,0],[1,8,8,0,1],[-1,-1,-1,-1,0],[-1,-1,-8,0,-1]];
+                const rookMoves = [[0,1,8,1,1,0],[1,1,8,8,0,1],[0,-1,-1,-1,-1,0],[1,-1,-1,-8,0,-1]];
                 rookMoves.forEach(element => {
                     var i = 1;
-                    while (pieceCoords[0]+i*element[0] !== element[1] && squares[location+i*element[2]].player !== player) {
-                        possibleCoordsMoves.push([pieceCoords[0]+i*element[3],pieceCoords[1]+i*element[4]]);
-                        if (squares[location+i*element[2]].name !== '') break;
+                    while (pieceCoords[element[0]]+i*element[1] !== element[2] && squares[location+i*element[3]].player !== player) {
+                        possibleCoordsMoves.push([pieceCoords[0]+i*element[4],pieceCoords[1]+i*element[5]]);
+                        if (squares[location+i*element[3]].name !== '') break;
                         i++;
                     }
                 });
-                // var i = 1;
-                // while (pieceCoords[0]+i < 8 && squares[location+i].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0]+i,pieceCoords[1]]);
-                //     if (squares[location+i].name !== '') break;
-                //     i++;
-                // }
-                // i = 1;
-                // while (pieceCoords[1]+i < 8 && squares[location+i*8].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+i]);
-                //     if (squares[location+i*8].name !== '') break;
-                //     i++;
-                // }
-                // i = 1;
-                // while (pieceCoords[0]-i > -1 && squares[location-i].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0]-i,pieceCoords[1]]);
-                //     if (squares[location-i].name !== '') break;
-                //     i++;
-                // }
-                // i = 1;
-                // while (pieceCoords[1]-i > -1 && squares[location-i*8].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-i]);
-                //     if (squares[location-i*8].name !== '') break;
-                //     i++;
-                // }
                 break;
 
             case 'bishop':
@@ -176,30 +168,6 @@ class Game extends React.Component {
                         j++;
                     }
                 });
-                // var j = 1;
-                // while (pieceCoords[0]+j < 8 && pieceCoords[1]+j < 8 && squares[location+j*9].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0]+j,pieceCoords[1]+j]);
-                //     if (squares[location+j*9].name !== '') break;
-                //     j++;
-                // }
-                // j = 1;
-                // while (pieceCoords[0]-j > -1 && pieceCoords[1]+j < 8 && squares[location+j*7].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0]-j,pieceCoords[1]+j]);
-                //     if (squares[location+j*7].name !== '') break;
-                //     j++;
-                // }
-                // j = 1;
-                // while (pieceCoords[0]-j > -1 && pieceCoords[1]-j > -1 && squares[location-j*9].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0]-j,pieceCoords[1]-j]);
-                //     if (squares[location-j*9].name !== '') break;
-                //     j++;
-                // }
-                // j = 1;
-                // while (pieceCoords[0]+j < 8 && pieceCoords[1]-j > -1 && squares[location-j*7].player !== player) {
-                //     possibleCoordsMoves.push([pieceCoords[0]+j,pieceCoords[1]-j]);
-                //     if (squares[location-j*7].name !== '') break;
-                //     j++;
-                // }
                 break;
 
             case 'knight':
@@ -217,12 +185,12 @@ class Game extends React.Component {
                 break;
 
             case 'queen':
-                const queenMovesH = [[1,8,1,1,0],[1,8,8,0,1],[-1,-1,-1,-1,0],[-1,-1,-8,0,-1]];
+                const queenMovesH = [[0,1,8,1,1,0],[1,1,8,8,0,1],[0,-1,-1,-1,-1,0],[1,-1,-1,-8,0,-1]];
                 queenMovesH.forEach(element => {
                     var i = 1;
-                    while (pieceCoords[0]+i*element[0] !== element[1] && squares[location+i*element[2]].player !== player) {
-                        possibleCoordsMoves.push([pieceCoords[0]+i*element[3],pieceCoords[1]+i*element[4]]);
-                        if (squares[location+i*element[2]].name !== '') break;
+                    while (pieceCoords[element[0]]+i*element[1] !== element[2] && squares[location+i*element[3]].player !== player) {
+                        possibleCoordsMoves.push([pieceCoords[0]+i*element[4],pieceCoords[1]+i*element[5]]);
+                        if (squares[location+i*element[3]].name !== '') break;
                         i++;
                     }
                 });
@@ -256,7 +224,7 @@ class Game extends React.Component {
     jump(step) {
         this.setState({
             move: step,
-            oneIsNext: (step % 2) === 0,
+            whiteIsNext: (step % 2) === 0,
         });
     }
 
@@ -271,14 +239,14 @@ class Game extends React.Component {
         } else if (winner === 'tie') {
             status = 'Stalemate';
         } else {
-            status = 'Next player: ' + (this.state.oneIsNext ? '1' : '2');
+            status = 'Next player: ' + (this.state.whiteIsNext ? 'white' : 'black');
         }
 
         return (
             <StyledGame>
                 <Board
                     squares = {current.squares}
-                    oneIsNext = {this.state.oneIsNext}
+                    whiteIsNext = {this.state.whiteIsNext}
                     onClick = {(i) => this.handleClick(i)}
                 />
                 <GameInfo>

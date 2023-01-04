@@ -6,7 +6,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 0,
+        square: 0,
     },
     {
         name: 'WhiteKnightL',
@@ -15,7 +15,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 1,
+        square: 1,
     },
     {
         name: 'WhiteBishopL',
@@ -24,7 +24,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 2,
+        square: 2,
     },
     {
         name: 'WhiteKing',
@@ -33,7 +33,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 3,
+        square: 3,
     },
     {
         name: 'WhiteQueen',
@@ -42,7 +42,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 34,
+        square: 4,
     },
     {
         name: 'WhiteBishopR',
@@ -51,7 +51,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 5,
+        square: 5,
     },
     {
         name: 'WhiteKnightR',
@@ -60,7 +60,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 6,
+        square: 6,
     },
     {
         name: 'WhiteRookR',
@@ -69,7 +69,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 7,
+        square: 7,
     },
     {
         name: 'WhitePawn1',
@@ -78,7 +78,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 8,
+        square: 8,
     },
     {
         name: 'WhitePawn2',
@@ -87,7 +87,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 9,
+        square: 9,
     },
     {
         name: 'WhitePawn3',
@@ -96,7 +96,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 10,
+        square: 10,
     },
     {
         name: 'WhitePawn4',
@@ -105,7 +105,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 11,
+        square: 11,
     },
     {
         name: 'WhitePawn5',
@@ -114,7 +114,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 12,
+        square: 12,
     },
     {
         name: 'WhitePawn6',
@@ -123,7 +123,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 13,
+        square: 13,
     },
     {
         name: 'WhitePawn7',
@@ -132,7 +132,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 14,
+        square: 14,
     },
     {
         name: 'WhitePawn8',
@@ -141,7 +141,7 @@ const Pieces = [
         player: 'white',
         selected: false,
         possibleMove: false,
-        startingPosition: 15,
+        square: 15,
     },
     {
         name: 'BlackPawn1',
@@ -150,7 +150,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 48,
+        square: 48,
     },
    {
         name: 'BlackPawn2',
@@ -159,7 +159,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 49,
+        square: 49,
     },
     {
         name: 'BlackPawn3',
@@ -168,7 +168,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 50,
+        square: 50,
     },
     {
         name: 'BlackPawn4',
@@ -177,7 +177,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 51,
+        square: 51,
     },
     {
         name: 'BlackPawn5',
@@ -186,7 +186,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 52,
+        square: 52,
     },
     {
         name: 'BlackPawn6',
@@ -195,7 +195,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 53,
+        square: 53,
     },
     {
         name: 'BlackPawn7',
@@ -204,7 +204,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 54,
+        square: 54,
     },
     {
         name: 'BlackPawn8',
@@ -213,7 +213,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 55,
+        square: 55,
     },
     {
         name: 'BlackRookL',
@@ -222,7 +222,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 56,
+        square: 56,
     },
     {
         name: 'BlackKnightL',
@@ -231,7 +231,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 57,
+        square: 57,
     },
     {
         name: 'BlackBishopL',
@@ -240,7 +240,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 58,
+        square: 58,
     },
     {
         name: 'BlackKing',
@@ -249,7 +249,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 59,
+        square: 59,
     },
     {
         name: 'BlackQueen',
@@ -258,7 +258,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 60,
+        square: 60,
     },
     {
         name: 'BlackBishopR',
@@ -267,7 +267,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 61,
+        square: 61,
     },
     {
         name: 'BlackKnightR',
@@ -276,7 +276,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 62,
+        square: 62,
     },
     {
         name: 'BlackRookR',
@@ -285,7 +285,7 @@ const Pieces = [
         player: 'black',
         selected: false,
         possibleMove: false,
-        startingPosition: 63,
+        square: 63,
     },
 ]
 
