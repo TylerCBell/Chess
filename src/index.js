@@ -1,20 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { StyledSquare, BoardRow, GameInfo, StyledGame } from './chess'
+import { StyledSquare, BoardRow, GameInfo, StyledGame, StyledCircle } from './chess'
 import '@fortawesome/fontawesome-free/css/all.css';
-import OnePieces from './chessPieces';
+import Pieces from './chessPieces';
 
-/*function clickMe() {
-    alert('clicked!');
-}*/
+//alert('here' + `${i}`);
 
 function Square(props) {
     return (
-        <StyledSquare position={props.position} onClick={props.onClick}>
-            { PlacePiece(props.value.fa, props.value.player) }
+        <StyledSquare position={props.position} selected={props.value.selected} onClick={props.onClick}>
+            <StyledCircle possibleMove={props.value.possibleMove}>
+                { PlacePiece(props.value.fa, props.value.player) }
+            </StyledCircle>
         </StyledSquare>
     );
 }
+//{ PlacePiece(props.value.fa, props.value.player) }
 
 class Board extends React.Component {
     renderSquare(position, squares) {
@@ -23,7 +24,6 @@ class Board extends React.Component {
                 position={position}
                 value={squares[position]}
                 onClick={() => this.props.onClick(position)}
-                player={1}
             />
         );
     }
@@ -43,34 +43,214 @@ class Board extends React.Component {
 class Game extends React.Component {
     constructor(props) {
         super(props);
+
+        const startingBoard = Array(64);
+        for ( let i = 0; i < startingBoard.length; i++ ) {
+            startingBoard[i] = { 
+                square: {i},
+                name: '',
+                type: '',
+                fa: '',
+                player: '',
+                selected: false,
+                possibleMove: false, 
+            }
+        }
+        Pieces.map(piece => startingBoard[piece.startingPosition] = piece);
+
         this.state = {
-            history: [{
-                squares: Array(64).fill(OnePieces.none),
-            }],
+            history: [{ squares: startingBoard, }],
+            possibleMoves: [],
             oneIsNext: true,
             move: 0,
-            pieceMoving: false,
+            moving: false,
+            selectedSquare: 0,
         };
     }
 
     handleClick(i) {
         const history = this.state.history.slice(0, this.state.move + 1);
         const current = history[history.length - 1];
-        const squares = current.squares.slice();
-        alert('clicked!' + {i});
+        var squares = current.squares.slice();
+        var moving = this.state.moving;
+        var selectedSquare = this.state.selectedSquare;
+        var possibleMoves = this.state.possibleMoves;
         /*if (calculateWinner(squares) || squares[i].player === this.state.oneIsNext ? 1 : 2) {
             return;
         }*/
-        squares[i] = OnePieces.WhiteBishop;
+
+        if ( moving === false && squares[i].name !== '' ) {
+            moving = true;
+            squares[i].selected = true;
+            if (i !== selectedSquare) {
+                squares[selectedSquare].selected = false;
+                selectedSquare = i;
+            }
+            possibleMoves = this.findPossibleMoves(squares[selectedSquare].type, selectedSquare, squares[selectedSquare].player, squares);
+            possibleMoves.forEach(element => squares[element].possibleMove = true);
+        } else if ( moving === true ) {
+            // possibleMoves.map((value) => (
+            //     this.movePiece(value, i)
+            // ))
+            moving = false;
+            squares[selectedSquare].selected = false;
+            alert('clicked! ' + {moving} + ' ' + {selectedSquare} );
+        } else {
+
+        }
+
         this.setState({
             history: history.concat([{
                 squares: squares,
             }]),
             move: history.length,
             oneIsNext: !this.state.oneIsNext,
-            pieceMoving: !this.state.pieceMoving,
+            moving: moving,
+            selectedSquare: selectedSquare,
         });
         
+    }
+
+    findPossibleMoves(piece, location, player, squares) {
+        var possibleCoordsMoves = [];
+        const pieceCoords = this.getCoords(location);
+
+        switch (piece) {
+            case 'pawn':
+                if (player === 'white') {
+                    possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+1]);
+                    if (pieceCoords[1] === 1) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+2]);
+                    if (squares[location+7].player === 'black' && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]+1])
+                    if (squares[location+9].player === 'black' && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]+1])
+                } else {
+                    possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-1]);
+                    if (pieceCoords[1] === 6) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-2]);
+                    if (squares[location-7].player === 'white' && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]-1])
+                    if (squares[location-9].player === 'white' && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]-1])
+                }
+                break;
+            
+            case 'rook':
+                const rookMoves = [[1,8,1,1,0],[1,8,8,0,1],[-1,-1,-1,-1,0],[-1,-1,-8,0,-1]];
+                rookMoves.forEach(element => {
+                    var i = 1;
+                    while (pieceCoords[0]+i*element[0] !== element[1] && squares[location+i*element[2]].player !== player) {
+                        possibleCoordsMoves.push([pieceCoords[0]+i*element[3],pieceCoords[1]+i*element[4]]);
+                        if (squares[location+i*element[2]].name !== '') break;
+                        i++;
+                    }
+                });
+                // var i = 1;
+                // while (pieceCoords[0]+i < 8 && squares[location+i].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0]+i,pieceCoords[1]]);
+                //     if (squares[location+i].name !== '') break;
+                //     i++;
+                // }
+                // i = 1;
+                // while (pieceCoords[1]+i < 8 && squares[location+i*8].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+i]);
+                //     if (squares[location+i*8].name !== '') break;
+                //     i++;
+                // }
+                // i = 1;
+                // while (pieceCoords[0]-i > -1 && squares[location-i].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0]-i,pieceCoords[1]]);
+                //     if (squares[location-i].name !== '') break;
+                //     i++;
+                // }
+                // i = 1;
+                // while (pieceCoords[1]-i > -1 && squares[location-i*8].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-i]);
+                //     if (squares[location-i*8].name !== '') break;
+                //     i++;
+                // }
+                break;
+
+            case 'bishop':
+                const bishopMoves = [[1,1,8,8,9],[-1,1,-1,8,7],[-1,-1,-1,-1,-9],[1,-1,8,-1,-7]];
+                bishopMoves.forEach(element => {
+                    var j = 1;
+                    while (pieceCoords[0]+j*element[0] !== element[2] && pieceCoords[1]+j*element[1] !== element[3] && squares[location+j*element[4]].player !== player) {
+                        possibleCoordsMoves.push([pieceCoords[0]+j*element[0],pieceCoords[1]+j*element[1]]);
+                        if (squares[location+j*element[4]].name !== '') break;
+                        j++;
+                    }
+                });
+                // var j = 1;
+                // while (pieceCoords[0]+j < 8 && pieceCoords[1]+j < 8 && squares[location+j*9].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0]+j,pieceCoords[1]+j]);
+                //     if (squares[location+j*9].name !== '') break;
+                //     j++;
+                // }
+                // j = 1;
+                // while (pieceCoords[0]-j > -1 && pieceCoords[1]+j < 8 && squares[location+j*7].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0]-j,pieceCoords[1]+j]);
+                //     if (squares[location+j*7].name !== '') break;
+                //     j++;
+                // }
+                // j = 1;
+                // while (pieceCoords[0]-j > -1 && pieceCoords[1]-j > -1 && squares[location-j*9].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0]-j,pieceCoords[1]-j]);
+                //     if (squares[location-j*9].name !== '') break;
+                //     j++;
+                // }
+                // j = 1;
+                // while (pieceCoords[0]+j < 8 && pieceCoords[1]-j > -1 && squares[location-j*7].player !== player) {
+                //     possibleCoordsMoves.push([pieceCoords[0]+j,pieceCoords[1]-j]);
+                //     if (squares[location-j*7].name !== '') break;
+                //     j++;
+                // }
+                break;
+
+            case 'knight':
+                const knightMoves = [[-1,-2],[1,-2],[2,-1],[2,1],[1,2],[-1,2],[-2,1],[-2,-1]];
+                knightMoves.forEach(element => {
+                    if (pieceCoords[0]+element[0] < 8 && pieceCoords[0]+element[0] > -1 && pieceCoords[1]+element[1] < 8 && pieceCoords[1]+element[1] > -1 && squares[location+element[0]+element[1]*8].player !== player) possibleCoordsMoves.push([pieceCoords[0]+element[0],pieceCoords[1]+element[1]]);
+                });
+                break;
+
+            case 'king':
+                const kingMoves = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+                kingMoves.forEach(element => {
+                    if (pieceCoords[0]+element[0] < 8 && pieceCoords[0]+element[0] > -1 && pieceCoords[1]+element[1] < 8 && pieceCoords[1]+element[1] > -1 && squares[location+element[0]+element[1]*8].player !== player) possibleCoordsMoves.push([pieceCoords[0]+element[0],pieceCoords[1]+element[1]]);
+                });
+                break;
+
+            case 'queen':
+                const queenMovesH = [[1,8,1,1,0],[1,8,8,0,1],[-1,-1,-1,-1,0],[-1,-1,-8,0,-1]];
+                queenMovesH.forEach(element => {
+                    var i = 1;
+                    while (pieceCoords[0]+i*element[0] !== element[1] && squares[location+i*element[2]].player !== player) {
+                        possibleCoordsMoves.push([pieceCoords[0]+i*element[3],pieceCoords[1]+i*element[4]]);
+                        if (squares[location+i*element[2]].name !== '') break;
+                        i++;
+                    }
+                });
+
+                const queenMovesD = [[1,1,8,8,9],[-1,1,-1,8,7],[-1,-1,-1,-1,-9],[1,-1,8,-1,-7]];
+                queenMovesD.forEach(element => {
+                    var j = 1;
+                    while (pieceCoords[0]+j*element[0] !== element[2] && pieceCoords[1]+j*element[1] !== element[3] && squares[location+j*element[4]].player !== player) {
+                        possibleCoordsMoves.push([pieceCoords[0]+j*element[0],pieceCoords[1]+j*element[1]]);
+                        if (squares[location+j*element[4]].name !== '') break;
+                        j++;
+                    }
+                });
+                break;
+
+            default:
+                break;
+        }
+
+        return possibleCoordsMoves.map(coord => this.getIndex(coord));
+    }
+
+    getCoords(location) {
+        return [location % 8, Math.floor(location / 8) ];
+    }
+
+    getIndex(location) {
+        return location[1] * 8 + location[0];
     }
 
     jump(step) {
@@ -85,31 +265,6 @@ class Game extends React.Component {
         const current = history[this.state.move];
         const winner = calculateWinner();
 
-        if (this.state.move === 0) {
-            current.squares[0] = OnePieces.WhiteRook;
-            current.squares[1] = OnePieces.WhiteKnight;
-            current.squares[2] = OnePieces.WhiteBishop;
-            current.squares[3] = OnePieces.WhiteQueen;
-            current.squares[4] = OnePieces.WhiteKing;
-            current.squares[5] = OnePieces.WhiteBishop;
-            current.squares[6] = OnePieces.WhiteKnight;
-            current.squares[7] = OnePieces.WhiteRook;
-            for (let i = 0; i < 8; i++) {
-                current.squares[8 + i] = OnePieces.WhitePawn;
-            }
-            for (let i = 0; i < 8; i++) {
-                current.squares[48 + i] = OnePieces.BlackPawn;
-            }
-            current.squares[56] = OnePieces.BlackRook;
-            current.squares[57] = OnePieces.BlackKnight;
-            current.squares[58] = OnePieces.BlackBishop;
-            current.squares[59] = OnePieces.BlackQueen;
-            current.squares[60] = OnePieces.BlackKing;
-            current.squares[61] = OnePieces.BlackBishop;
-            current.squares[62] = OnePieces.BlackKnight;
-            current.squares[63] = OnePieces.BlackRook;
-        }
-
         let status;
         if (winner === 'win') {
             status = 'Winner: ' + winner;
@@ -121,7 +276,7 @@ class Game extends React.Component {
 
         return (
             <StyledGame>
-                <Board 
+                <Board
                     squares = {current.squares}
                     oneIsNext = {this.state.oneIsNext}
                     onClick = {(i) => this.handleClick(i)}
@@ -139,7 +294,7 @@ function PlacePiece(name, player) {
     return (
         <i
             className={name}
-            style={{ color: player % 2 === 0 ? '#000000' : '#FFFFFF' }}
+            style={{ color: player, display: 'flex', 'justify-content': 'center', 'align-items': 'center' }}
         />
     )
 }
@@ -149,13 +304,8 @@ function calculateWinner() {
     return null;
 }
 
-
-function squareBackground(position, possible) {
-    if (possible) {
-        return '#5CF80C';
-    }
-}
-
+// '#5CF80C';
+// 600,-450
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<Game />);
