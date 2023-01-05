@@ -47,7 +47,7 @@ class Game extends React.Component {
         const startingBoard = Array(64);
         for ( let i = 0; i < startingBoard.length; i++ ) {
             startingBoard[i] = { 
-                square: {i},
+                square: i,
                 name: '',
                 type: '',
                 fa: '',
@@ -56,7 +56,7 @@ class Game extends React.Component {
                 possibleMove: false, 
             }
         }
-        Pieces.map(piece => startingBoard[piece.square] = piece);
+        Pieces.forEach(piece => startingBoard[piece.square] = piece);
 
         this.state = {
             history: [{ 
@@ -79,10 +79,15 @@ class Game extends React.Component {
         var selectedSquare = this.state.selectedSquare;
         var possibleMoves = this.state.possibleMoves;
         var moved = false;
-        
-        /*if (calculateWinner(squares) || squares[i].player === this.state.whiteIsNext ? 1 : 2) {
-            return;
-        }*/
+        var status = false;
+
+        const kingCoords = squares.find( element => element.type === 'king' && element.player === player ).square;
+        var coveredSquares = [];
+        squares.forEach(element => {
+            if (element.player !== player && element.name !== '') coveredSquares = coveredSquares.concat(this.findPossibleMoves(element.type, element.square, element.player, squares, [], true, kingCoords));
+        });
+        status = coveredSquares.includes(kingCoords);
+        //alert(`${coveredSquares}`);
 
         if ( squares[i].player === player ) {
             moving = true;
@@ -93,7 +98,7 @@ class Game extends React.Component {
                 selectedSquare = i;
             }
             possibleMoves.forEach(element => squares[element].possibleMove = false);
-            possibleMoves = this.findPossibleMoves(squares[selectedSquare].type, selectedSquare, player, squares);
+            possibleMoves = this.findPossibleMoves(squares[selectedSquare].type, selectedSquare, player, squares, coveredSquares, false, kingCoords);
             possibleMoves.forEach(element => squares[element].possibleMove = true);
         } else if ( squares[i].possibleMove === true ) {
             moving = false;
@@ -127,22 +132,35 @@ class Game extends React.Component {
         });
     }
 
-    findPossibleMoves(piece, location, player, squares) {
+    findPossibleMoves(piece, location, player, squares, coveredSquares, capture, kingCoords) {
         var possibleCoordsMoves = [];
+        var availableMoves = [];
         const pieceCoords = this.getCoords(location);
+
+        // if (!capture && piece !== 'king') {
+        //     squares[location].type = '';
+        //     squares[location].player = '';
+        //     var checkSquares = [];
+        //     squares.forEach(element => {
+        //         if (element.player !== player && element.name !== '') checkSquares = checkSquares.concat(this.findPossibleMoves(element.type, element.square, element.player, squares, [], true, kingCoords));
+        //     });
+        //     squares[location].type = piece;
+        //     squares[location].player = player;
+        //     if (checkSquares.includes(kingCoords)) return possibleCoordsMoves;
+        // }
 
         switch (piece) {
             case 'pawn':
                 if (player === 'white') {
-                    if (squares[location+8].name === '' && pieceCoords[1]+1 < 8) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+1]);
-                    if (pieceCoords[1] === 1) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+2]);
-                    if (squares[location+7].player === 'black' && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]+1])
-                    if (squares[location+9].player === 'black' && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]+1])
+                    if (squares[location+8].type === '' && pieceCoords[1]+1 < 8 && !capture) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+1]);
+                    if (pieceCoords[1] === 1 && !capture) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]+2]);
+                    if ((squares[location+7].player === 'black' || capture) && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]+1])
+                    if ((squares[location+9].player === 'black' || capture) && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]+1])
                 } else {
-                    if (squares[location-8].name === '' && pieceCoords[1]-1 > -1)possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-1]);
-                    if (pieceCoords[1] === 6) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-2]);
-                    if (squares[location-7].player === 'white' && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]-1])
-                    if (squares[location-9].player === 'white' && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]-1])
+                    if (squares[location-8].type === '' && pieceCoords[1]-1 > -1 && !capture)possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-1]);
+                    if (pieceCoords[1] === 6 && !capture) possibleCoordsMoves.push([pieceCoords[0],pieceCoords[1]-2]);
+                    if ((squares[location-7].player === 'white' || capture) && pieceCoords[0]+1 < 8) possibleCoordsMoves.push([pieceCoords[0]+1,pieceCoords[1]-1])
+                    if ((squares[location-9].player === 'white' || capture) && pieceCoords[0]-1 > -1) possibleCoordsMoves.push([pieceCoords[0]-1,pieceCoords[1]-1])
                 }
                 break;
             
@@ -152,7 +170,7 @@ class Game extends React.Component {
                     var i = 1;
                     while (pieceCoords[element[0]]+i*element[1] !== element[2] && squares[location+i*element[3]].player !== player) {
                         possibleCoordsMoves.push([pieceCoords[0]+i*element[4],pieceCoords[1]+i*element[5]]);
-                        if (squares[location+i*element[3]].name !== '') break;
+                        if (squares[location+i*element[3]].type !== '') break;
                         i++;
                     }
                 });
@@ -164,7 +182,7 @@ class Game extends React.Component {
                     var j = 1;
                     while (pieceCoords[0]+j*element[0] !== element[2] && pieceCoords[1]+j*element[1] !== element[3] && squares[location+j*element[4]].player !== player) {
                         possibleCoordsMoves.push([pieceCoords[0]+j*element[0],pieceCoords[1]+j*element[1]]);
-                        if (squares[location+j*element[4]].name !== '') break;
+                        if (squares[location+j*element[4]].type !== '') break;
                         j++;
                     }
                 });
@@ -180,7 +198,7 @@ class Game extends React.Component {
             case 'king':
                 const kingMoves = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
                 kingMoves.forEach(element => {
-                    if (pieceCoords[0]+element[0] < 8 && pieceCoords[0]+element[0] > -1 && pieceCoords[1]+element[1] < 8 && pieceCoords[1]+element[1] > -1 && squares[location+element[0]+element[1]*8].player !== player) possibleCoordsMoves.push([pieceCoords[0]+element[0],pieceCoords[1]+element[1]]);
+                    if (pieceCoords[0]+element[0] < 8 && pieceCoords[0]+element[0] > -1 && pieceCoords[1]+element[1] < 8 && pieceCoords[1]+element[1] > -1 && squares[location+element[0]+element[1]*8].player !== player && !coveredSquares.includes(location+element[0]+element[1]*8)) possibleCoordsMoves.push([pieceCoords[0]+element[0],pieceCoords[1]+element[1]]);
                 });
                 break;
 
@@ -190,7 +208,7 @@ class Game extends React.Component {
                     var i = 1;
                     while (pieceCoords[element[0]]+i*element[1] !== element[2] && squares[location+i*element[3]].player !== player) {
                         possibleCoordsMoves.push([pieceCoords[0]+i*element[4],pieceCoords[1]+i*element[5]]);
-                        if (squares[location+i*element[3]].name !== '') break;
+                        if (squares[location+i*element[3]].type !== '') break;
                         i++;
                     }
                 });
@@ -200,7 +218,7 @@ class Game extends React.Component {
                     var j = 1;
                     while (pieceCoords[0]+j*element[0] !== element[2] && pieceCoords[1]+j*element[1] !== element[3] && squares[location+j*element[4]].player !== player) {
                         possibleCoordsMoves.push([pieceCoords[0]+j*element[0],pieceCoords[1]+j*element[1]]);
-                        if (squares[location+j*element[4]].name !== '') break;
+                        if (squares[location+j*element[4]].type !== '') break;
                         j++;
                     }
                 });
@@ -210,11 +228,73 @@ class Game extends React.Component {
                 break;
         }
 
-        return possibleCoordsMoves.map(coord => this.getIndex(coord));
+        const possibleIndexMoves = possibleCoordsMoves.map(coord => this.getIndex(coord));
+
+        if (!capture && piece !== 'king') {
+            squares[location].type = '';
+            squares[location].player = '';
+            
+
+            possibleIndexMoves.forEach(move => {
+                const squarePiece = squares[move].type;
+                const squarePlayer = squares[move].player;
+                squares[move].type = piece;
+                squares[move].player = player;
+
+                var checkSquares = [];
+                squares.forEach(element => {
+                    if (element.player !== player && element.name !== '') checkSquares = checkSquares.concat(this.findPossibleMoves(element.type, element.square, element.player, squares, [], true, kingCoords));
+                });
+                alert('squares: ' + `${checkSquares}`);
+                if (!checkSquares.includes(kingCoords)) {
+                    alert(`${move}`);
+                    availableMoves = availableMoves.concat(move);
+                }
+
+                squares[move].type = squarePiece;
+                squares[move].player = squarePlayer;
+            });
+
+            squares[location].type = piece;
+            squares[location].player = player;
+            alert(`${availableMoves}`);
+            return availableMoves;
+            //if (checkSquares.includes(kingCoords)) return possibleCoordsMoves;
+        }
+
+        // if (!capture && piece !== 'king') {
+        //     squares[location].type = '';
+        //     squares[location].player = '';
+
+        //     possibleIndexMoves.forEach(move => {
+        //         // const squarePiece = squares[move].type;
+        //         // const squarePlayer = squares[move].player;
+        //         // squares[move].type = piece;
+        //         // squares[move].player = player;
+        //         var checkSquares = [];
+        //         squares.forEach(element => {
+        //             if (element.player !== player && element.name !== '') {
+        //                 checkSquares = checkSquares.concat(this.findPossibleMoves(element.type, element.square, element.player, squares, [], true, kingCoords));
+        //                 alert(`${element.name}`);
+        //             }
+        //         });
+        //         alert(`${checkSquares}`);
+        //         // if (!checkSquares.includes(kingCoords)) moves = moves.concat(move);
+        //         // squares[move].type = squarePiece;
+        //         // squares[move].player = squarePlayer;
+        //     });
+
+        //     squares[location].type = piece;
+        //     squares[location].player = player;
+        // }
+
+        // return moves;
+
+        return possibleIndexMoves;
     }
 
     getCoords(location) {
-        return [location % 8, Math.floor(location / 8) ];
+        return [location % 8, Math.floor(location / 8)];
     }
 
     getIndex(location) {
@@ -231,7 +311,7 @@ class Game extends React.Component {
     render() {
         const history = this.state.history;
         const current = history[this.state.move];
-        const winner = calculateWinner();
+        const winner = 0;
 
         let status;
         if (winner === 'win') {
@@ -267,12 +347,6 @@ function PlacePiece(name, player) {
     )
 }
 
-
-function calculateWinner() {
-    return null;
-}
-
-// '#5CF80C';
 // 600,-450
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
